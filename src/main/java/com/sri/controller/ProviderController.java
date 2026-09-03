@@ -1,18 +1,14 @@
 package com.sri.controller;
 
-import java.io.IOException;
-import java.util.Map;
-
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.sri.service.AuthService;
+import com.sri.dto.TokenResponse;
+import com.sri.service.AccessTokenService;
 
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,36 +18,21 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ProviderController {
 
-    @Value("${oauth2.authorization-base-url}")
-    private String authorizationBaseUrl;
-
-    private final AuthService authService;
-
-
-    @GetMapping("/providers")
-    public ResponseEntity<?> getProviders() {
-
-        log.info("Fetching available OAuth providers");
-
-        return ResponseEntity.ok(
-            Map.of(
-                "providers", authService.getProviders()
-            )
-        );
-    }
-
+    private final AccessTokenService accessTokenService;
 
     @GetMapping("/login/{provider}")
-    public void login(@PathVariable String provider,HttpServletResponse response) throws IOException {
+    public ResponseEntity<TokenResponse> login(@PathVariable String provider) {
 
         log.info("Login request received for provider: {}", provider);
 
-        String providerId = authService.getLoginUrl(provider).get("provider");
+        String accessToken = accessTokenService.getToken(provider);
 
-        String redirectUrl = authorizationBaseUrl + providerId;
+        if (accessToken == null) {
+            throw new IllegalArgumentException("Access token not found for provider: " + provider);
+        }
 
-        log.info("Redirecting to OAuth2 authorization endpoint for provider: {}", providerId);
+        log.info("Returning access token for provider: {}", provider);
 
-        response.sendRedirect(redirectUrl);
+        return ResponseEntity.ok(new TokenResponse(accessToken));
     }
 }

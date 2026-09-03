@@ -40,28 +40,23 @@ public class AuthService {
         return providers;
     }
 
+    public OAuthProvider getProvider(String providerId) {
+        return oauthProviderRepository.findByProviderId(providerId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Unsupported authentication provider: " + providerId));
+    }
 
     @Cacheable(value = "oauthProvider", key = "#provider")
     public Map<String, String> getLoginUrl(String provider) {
 
         log.info("Searching for OAuth provider: {}", provider);
 
-        OAuthProvider oauthProvider =
-                oauthProviderRepository
-                    .findByProviderId(provider)
-                    .orElseThrow(() -> {
-                        log.warn("Unsupported OAuth provider requested: {}", provider);
-
-                        return new IllegalArgumentException(
-                            "Unsupported authentication provider: " + provider
-                        );
-                    });
+        OAuthProvider oauthProvider = getProvider(provider);
 
         log.info("OAuth provider found: {}", oauthProvider.getProviderId());
 
         return Map.of(
-            "provider", oauthProvider.getProviderId(),
-            "loginUrl", oauthProvider.getLoginUrl()
-        );
+                "provider", oauthProvider.getProviderId(),
+                "loginUrl", oauthProvider.getLoginUrl());
     }
 }

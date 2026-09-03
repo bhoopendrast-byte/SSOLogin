@@ -39,19 +39,14 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         OAuth2AuthorizedClient authorizedClient =  authorizedClientService.loadAuthorizedClient(provider,username);
 
         if (authorizedClient == null) {
-            throw new IllegalStateException(
-                    "OAuth2 authorized client not found"
-            );
+            throw new IllegalStateException("OAuth2 authorized client not found");
         }
 
         if (authorizedClient.getAccessToken() == null) {
-            throw new IllegalStateException(
-                    "Access token not found"
-            );
+            throw new IllegalStateException("Access token not found");
         }
 
         String accessToken = authorizedClient.getAccessToken().getTokenValue();
-
         accessTokenService.saveToken(provider,accessToken);
 
     }
